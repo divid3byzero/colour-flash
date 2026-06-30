@@ -33,7 +33,7 @@
   h1{ font-size:21px; margin:4px 0 0; letter-spacing:-.01em; }
   .sub{ color:#b7b7bd; font-size:13px; margin-bottom:4px; }
   .label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--club);
-    margin:8px 0 5px; font-weight:700; }
+    margin:7px 0 4px; font-weight:700; }
   .colors{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .ck{ display:flex; align-items:center; gap:12px; padding:9px 14px; border-radius:12px;
     background:#161618; border:2px solid #2a2a2e; cursor:pointer; user-select:none; font-size:15px; }
@@ -49,14 +49,14 @@
   .stepper button:active{ background:#2a2a2e; }
   .stepper .val{ min-width:74px; text-align:center; font-size:18px; font-variant-numeric:tabular-nums; }
   .hint{ color:#8b8b90; font-size:12px; margin-top:6px; }
-  .toggles{ display:flex; flex-direction:column; gap:6px; }
+  .toggles{ display:flex; flex-direction:column; gap:5px; }
   .tg{ display:flex; align-items:center; justify-content:space-between; padding:9px 14px;
     background:#161618; border:2px solid #2a2a2e; border-radius:12px; font-size:15px; cursor:pointer; }
   .sw{ width:50px; height:30px; border-radius:30px; background:#3a3a40; position:relative; transition:.15s; flex:0 0 auto; }
   .sw::after{ content:""; position:absolute; top:3px; left:3px; width:24px; height:24px;
     border-radius:50%; background:#fff; transition:.15s; }
   .tg.on .sw{ background:var(--club); } .tg.on .sw::after{ left:23px; }
-  #start{ width:100%; margin-top:10px; padding:12px; border:0; border-radius:14px;
+  #start{ width:100%; margin-top:8px; padding:12px; border:0; border-radius:14px;
     background:var(--club); color:#111; font-size:18px; font-weight:800; cursor:pointer; }
   #start:active{ background:#e6c000; }
 
@@ -77,6 +77,49 @@
   #exit{ position:fixed; z-index:10; top:max(12px,env(safe-area-inset-top)); right:14px; width:48px; height:48px;
     border-radius:50%; border:0; background:rgba(0,0,0,.28); color:#fff; font-size:24px; cursor:pointer; }
   #run.paused #cname{ font-size:7vw; opacity:.85; }
+
+  /* gamechanger banner */
+  #gc{ position:fixed; inset:0; z-index:5; display:none; align-items:center; justify-content:center;
+    padding:24px; pointer-events:none; }
+  #gc.show{ display:flex; }
+  .gc-inner{ background:rgba(8,8,10,.7); border:3px solid var(--club); border-radius:18px;
+    padding:16px 22px 18px; max-width:84%; text-align:center; animation:gcpulse 1s ease-in-out infinite; }
+  .gc-ico{ display:block; margin:0 auto 4px; }
+  .gc-kicker{ color:var(--club); font-size:11px; font-weight:800; letter-spacing:.18em;
+    text-transform:uppercase; margin-bottom:2px; }
+  .gc-title{ color:#fff; font-size:clamp(26px,6.4vw,60px); font-weight:900; text-transform:uppercase;
+    letter-spacing:.01em; line-height:1.04; }
+  .gc-text{ color:#e7e7ea; font-size:clamp(15px,3vw,26px); margin-top:7px; font-weight:600; }
+  @keyframes gcpulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
+
+  /* spice segmented control */
+  .seg{ display:flex; gap:6px; margin-top:7px; }
+  .seg button{ flex:1; padding:10px 4px; border:2px solid #2a2a2e; background:#161618; color:#fff;
+    border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+  .seg button.on{ background:var(--club); color:#111; border-color:var(--club); }
+
+  /* gamechanger accordion */
+  .acc{ display:flex; flex-direction:column; gap:5px; margin-top:6px; }
+  .acc-item{ border:2px solid #2a2a2e; border-radius:10px; background:#161618; overflow:hidden; }
+  .acc-h{ width:100%; display:flex; align-items:center; gap:10px; padding:8px 13px; background:transparent;
+    border:0; color:#fff; font-size:14px; font-weight:700; cursor:pointer; text-align:left; }
+  .acc-h .lvl-dot{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+  .acc-h .chev{ margin-left:auto; color:#9a9aa0; transition:transform .15s; }
+  .acc-item.open .acc-h .chev{ transform:rotate(180deg); }
+  .acc-body{ display:none; padding:0 14px 9px; }
+  .acc-item.open .acc-body{ display:block; }
+  .gc-li{ font-size:12.5px; color:#b7b7bd; padding:5px 0; border-top:1px solid #232327; line-height:1.35; }
+  .gc-li:first-child{ border-top:0; }
+  .gc-li b{ color:#fff; }
+
+  /* start countdown */
+  #pre{ flex-direction:column; align-items:center; justify-content:center; background:#000; }
+  .pre-crest{ width:clamp(120px,34vmin,260px); height:clamp(120px,34vmin,260px);
+    background:var(--logo) center/contain no-repeat; filter:drop-shadow(0 6px 22px rgba(0,0,0,.6)); }
+  .pre-crest.beat{ animation:prebeat .6s ease-out; }
+  @keyframes prebeat{ 0%{ transform:scale(1); } 28%{ transform:scale(1.14); } 100%{ transform:scale(1); } }
+  #preNum{ margin-top:4vmin; color:#fff; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+    font-size:clamp(80px,18vw,200px); text-shadow:0 2px 20px rgba(0,0,0,.4); }
 </style>
 </head>
 <body>
@@ -86,8 +129,7 @@
   <div class="card">
     <div class="brand">
       <div class="crest"></div>
-      <h1>Farbblitzer</h1>
-      <div class="sub">K&ouml;nig des Feldes &middot; Startsignal</div>
+      <h1>K&ouml;nig des Feldes</h1>
     </div>
 
     <div class="label">Farben</div>
@@ -102,7 +144,7 @@
     <div class="row">
       <div class="stepper">
         <button id="minus">&minus;</button>
-        <span class="val"><span id="ival">15</span> s</span>
+        <span class="val"><span id="ival">20</span> s</span>
         <button id="plus">+</button>
       </div>
       <span class="hint">Zeit, die eine Farbe stehen bleibt.</span>
@@ -115,8 +157,40 @@
       <div class="tg" id="tgSound"><span>Signalton beim Wechsel</span><span class="sw"></span></div>
     </div>
 
+    <div class="label">Gamechanger</div>
+    <div class="tg on" id="tgGC"><span>Gamechanger einblenden</span><span class="sw"></span></div>
+    <div class="seg" id="spice">
+      <button data-v="dezent">Dezent</button>
+      <button data-v="mittel" class="on">Mittel</button>
+      <button data-v="wild">Wild</button>
+    </div>
+
+    <div class="acc" id="acc">
+      <div class="acc-item">
+        <button class="acc-h" type="button"><span class="lvl-dot" style="background:#16a34a"></span><span>Dezent</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="acc-body" id="accL1"></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-h" type="button"><span class="lvl-dot" style="background:#f8d000"></span><span>Mittel</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="acc-body" id="accL2"></div>
+      </div>
+      <div class="acc-item">
+        <button class="acc-h" type="button"><span class="lvl-dot" style="background:#f97316"></span><span>Wild</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="acc-body" id="accL3"></div>
+      </div>
+    </div>
+
     <button id="start">Start</button>
   </div>
+</section>
+
+<!-- ===================== START COUNTDOWN ===================== -->
+<section id="pre" class="screen">
+  <div class="pre-crest"></div>
+  <div id="preNum">5</div>
 </section>
 
 <!-- ===================== RUN ===================== -->
@@ -124,6 +198,16 @@
   <button id="exit" aria-label="Beenden">&times;</button>
   <div id="count"></div>
   <div id="cname"></div>
+  <div id="gc"><div class="gc-inner">
+    <svg class="gc-ico" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+      <path d="M12 2.5 L22.5 21 H1.5 Z" fill="none" stroke="#f8d000" stroke-width="2.2" stroke-linejoin="round"/>
+      <line x1="12" y1="9" x2="12" y2="15" stroke="#f8d000" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="12" cy="18.2" r="1.4" fill="#f8d000"/>
+    </svg>
+    <div class="gc-kicker">Gamechanger</div>
+    <div class="gc-title" id="gcTitle"></div>
+    <div class="gc-text" id="gcText"></div>
+  </div></div>
   <div id="pausehint">Tippen = Pause</div>
 </section>
 
@@ -131,12 +215,26 @@
 (function(){
   "use strict";
   var NAMES = { rot:"Rot", blau:"Blau", gelb:"Gelb", orange:"Orange" };
-  var interval = 15;
+  var interval = 20;
   var opt = { count:true, vary:true, sound:false };
+  var spice = "mittel", gcOn = true;
+  var CARDS = [
+    { lvl:1, t:"Doppelpunkt",         x:"Diese Runde z\u00e4hlt jedes Tor doppelt!" },
+    { lvl:1, t:"Schwacher Fu\u00df",  x:"Abschluss nur mit dem schwachen Fu\u00df!" },
+    { lvl:1, t:"Finte zuerst",        x:"Vor dem Abschluss eine Finte zeigen!" },
+    { lvl:2, t:"Gegen\u00fcber",      x:"Nicht das Leuchttor \u2013 das gegen\u00fcberliegende Tor z\u00e4hlt!" },
+    { lvl:2, t:"Konter-Bonus",        x:"Eroberung + Konter z\u00e4hlt doppelt!" },
+    { lvl:2, t:"Tempo",               x:"So schnell wie m\u00f6glich abschlie\u00dfen!" },
+    { lvl:3, t:"Doppeldecker",        x:"1 Angreifer gegen 2 Verteidiger \u2013 abschirmen!" },
+    { lvl:3, t:"Zwei Tore",           x:"Erst durch ein beliebiges Tor, dann durchs Leuchttor!" },
+    { lvl:3, t:"R\u00fccken zum Feld",x:"Angreifer startet mit dem R\u00fccken zu den Toren!" }
+  ];
+  var lastCard=null, gcTimer=null;
   var timer=null, tickTimer=null, remaining=0, current=null, wake=null, audioCtx=null;
 
   var $ = function(id){ return document.getElementById(id); };
-  var setup=$("setup"), run=$("run"), cname=$("cname"), count=$("count");
+  var setup=$("setup"), run=$("run"), cname=$("cname"), count=$("count"),
+      gcEl=$("gc"), gcTitle=$("gcTitle"), gcText=$("gcText");
 
   // colour toggles
   document.querySelectorAll(".ck").forEach(function(ck){
@@ -155,13 +253,35 @@
 
   // interval stepper
   function renderIval(){ $("ival").textContent = interval; }
-  $("minus").addEventListener("click", function(){ interval=Math.max(2, interval-1); renderIval(); });
+  $("minus").addEventListener("click", function(){ interval=Math.max(20, interval-1); renderIval(); });
   $("plus").addEventListener("click", function(){ interval=Math.min(60, interval+1); renderIval(); });
 
   // option toggles
   function bindTg(id,key){ $(id).addEventListener("click", function(){
     opt[key]=!opt[key]; $(id).classList.toggle("on", opt[key]); }); }
   bindTg("tgCount","count"); bindTg("tgVary","vary"); bindTg("tgSound","sound");
+
+  // gamechanger intensity
+  document.querySelectorAll("#spice button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      spice = btn.getAttribute("data-v");
+      document.querySelectorAll("#spice button").forEach(function(b){ b.classList.toggle("on", b===btn); });
+    });
+  });
+
+  // gamechanger on/off
+  function applyGcOn(){ var o=gcOn?"1":"0.4"; $("spice").style.opacity=o; $("acc").style.opacity=o; }
+  $("tgGC").addEventListener("click", function(){ gcOn=!gcOn; $("tgGC").classList.toggle("on", gcOn); applyGcOn(); });
+
+  // gamechanger overview accordion (filled from CARDS, grouped by intensity)
+  function fillAcc(id, lvl){
+    $(id).innerHTML = CARDS.filter(function(c){ return c.lvl===lvl; })
+      .map(function(c){ return '<div class="gc-li"><b>'+c.t+'</b> \u2013 '+c.x+'</div>'; }).join("");
+  }
+  fillAcc("accL1",1); fillAcc("accL2",2); fillAcc("accL3",3);
+  document.querySelectorAll(".acc-h").forEach(function(h){
+    h.addEventListener("click", function(){ h.parentNode.classList.toggle("open"); });
+  });
 
   // audio beep (created lazily, must be unlocked by user gesture = Start tap)
   function beep(){
@@ -176,11 +296,42 @@
     }catch(e){}
   }
 
+  // attention alert for a gamechanger
+  function playAlert(){
+    if(!audioCtx) return;
+    try{
+      var now=audioCtx.currentTime, seq=[[880,0],[660,0.16],[990,0.32]];
+      seq.forEach(function(p){
+        var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type="square"; o.frequency.value=p[0]; o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.0001, now+p[1]);
+        g.gain.exponentialRampToValueAtTime(0.55, now+p[1]+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now+p[1]+0.14);
+        o.start(now+p[1]); o.stop(now+p[1]+0.16);
+      });
+    }catch(e){}
+  }
+  function rollGC(){
+    if(!gcOn) return null;
+    var max={ dezent:1, mittel:2, wild:3 }[spice];
+    var pool=[], w={1:3,2:2,3:1};
+    CARDS.forEach(function(c){ if(c.lvl<=max){ for(var i=0;i<w[c.lvl];i++) pool.push(c); } });
+    var card=pool[Math.floor(Math.random()*pool.length)], guard=0;
+    while(card===lastCard && pool.length>1 && guard++<8){ card=pool[Math.floor(Math.random()*pool.length)]; }
+    lastCard=card; return card;
+  }
+  function showGC(card){ gcTitle.textContent=card.t; gcText.textContent=card.x; gcEl.classList.add("show"); playAlert(); }
+  function hideGC(){ gcEl.classList.remove("show"); }
+
+  var bag=[];
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
   function pick(){
-    var cols=activeColors();
-    var c=cols[Math.floor(Math.random()*cols.length)];
-    if(opt.vary && cols.length>1){ while(c===current){ c=cols[Math.floor(Math.random()*cols.length)]; } }
-    return c;
+    if(bag.length===0){
+      bag=shuffle(activeColors().slice());
+      // avoid the same colour across the seam of two shuffles
+      if(opt.vary && bag.length>1 && bag[0]===current){ bag.push(bag.shift()); }
+    }
+    return bag.shift();
   }
 
   function show(c){
@@ -190,14 +341,37 @@
     remaining = interval;
     renderCount();
     beep();
+    hideGC(); clearTimeout(gcTimer);
+    var card=rollGC();
+    if(card){
+      var roundMs=interval*1000, lo=600, hi=Math.max(lo+300, roundMs-3000);
+      var delay=lo+Math.random()*(hi-lo);
+      gcTimer=setTimeout(function(){ showGC(card); }, delay);
+    }
   }
   function renderCount(){ count.textContent = opt.count ? remaining : ""; }
 
+  var preTimer=null;
+  function preCountdown(done){
+    var pre=$("pre"), num=$("preNum"), crest=pre.querySelector(".pre-crest"), n=5;
+    function beat(){ crest.classList.remove("beat"); void crest.offsetWidth; crest.classList.add("beat"); }
+    pre.classList.add("active");
+    num.textContent=n; beat();
+    preTimer=setInterval(function(){
+      n--;
+      if(n>=1){ num.textContent=n; beat(); }
+      else { clearInterval(preTimer); preTimer=null; pre.classList.remove("active"); done(); }
+    }, 1000);
+  }
   function startRun(){
-    // unlock audio on the Start gesture
-    if(opt.sound){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    // unlock audio + keep awake on the Start gesture
+    try{ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.resume) audioCtx.resume(); }catch(e){}
     requestWake();
     setup.classList.remove("active");
+    preCountdown(beginRun);
+  }
+  function beginRun(){
+    bag=[]; current=null;
     run.classList.add("active");
     show(pick());
     timer=setInterval(function(){ show(pick()); }, interval*1000);
@@ -208,7 +382,7 @@
   function togglePause(){
     paused=!paused;
     if(paused){
-      clearInterval(timer); clearInterval(tickTimer);
+      clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcTimer); hideGC();
       run.className="screen active paused"; cname.textContent="Pause";
     } else {
       run.classList.remove("paused");
@@ -220,8 +394,8 @@
   run.addEventListener("click", function(e){ if(e.target.id!=="exit") togglePause(); });
 
   function stopRun(){
-    clearInterval(timer); clearInterval(tickTimer); paused=false;
-    run.className="screen"; setup.classList.add("active");
+    clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcTimer); clearInterval(preTimer); paused=false; hideGC();
+    run.className="screen"; $("pre").classList.remove("active"); setup.classList.add("active");
     releaseWake();
   }
   $("exit").addEventListener("click", function(e){ e.stopPropagation(); stopRun(); });
