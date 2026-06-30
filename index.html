@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1a12">
+<title>Farbblitzer &ndash; K&ouml;nig des Feldes</title>
+<style>
+  :root{ --rot:#e11d48; --blau:#2563eb; --gelb:#f5c518; --gruen:#16a34a; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; }
+  body{ font-family:-apple-system,"Helvetica Neue",Arial,sans-serif; background:#0c1a12;
+    color:#fff; height:100vh; overflow:hidden; }
+  .screen{ position:fixed; inset:0; display:none; }
+  .screen.active{ display:flex; }
+
+  /* ---------- setup ---------- */
+  #setup{ flex-direction:column; align-items:center; justify-content:flex-start;
+    padding:max(20px,env(safe-area-inset-top)) 22px 22px; overflow:auto; }
+  #setup .card{ width:100%; max-width:520px; }
+  h1{ font-size:24px; margin:6px 0 2px; letter-spacing:-.01em; }
+  .sub{ color:#9fb3a6; font-size:14px; margin-bottom:22px; }
+  .label{ font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:#7fae93;
+    margin:20px 0 8px; font-weight:700; }
+  .colors{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ck{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:12px;
+    background:#13251b; border:2px solid #1f3a2b; cursor:pointer; user-select:none; font-size:17px; }
+  .ck .dot{ width:24px; height:24px; border-radius:50%; flex:0 0 auto; }
+  .ck.off{ opacity:.38; }
+  .ck.off .check{ opacity:0; }
+  .ck .check{ margin-left:auto; font-weight:800; }
+  .row{ display:flex; align-items:center; gap:14px; }
+  .stepper{ display:flex; align-items:center; gap:0; background:#13251b; border:2px solid #1f3a2b;
+    border-radius:12px; overflow:hidden; }
+  .stepper button{ width:46px; height:46px; border:0; background:transparent; color:#fff;
+    font-size:24px; font-weight:700; cursor:pointer; }
+  .stepper button:active{ background:#1f3a2b; }
+  .stepper .val{ min-width:74px; text-align:center; font-size:18px; font-variant-numeric:tabular-nums; }
+  .hint{ color:#7d9488; font-size:13px; margin-top:6px; }
+  .toggles{ display:flex; flex-direction:column; gap:10px; }
+  .tg{ display:flex; align-items:center; justify-content:space-between; padding:13px 16px;
+    background:#13251b; border:2px solid #1f3a2b; border-radius:12px; font-size:16px; cursor:pointer; }
+  .sw{ width:50px; height:30px; border-radius:30px; background:#33513f; position:relative; transition:.15s; flex:0 0 auto; }
+  .sw::after{ content:""; position:absolute; top:3px; left:3px; width:24px; height:24px;
+    border-radius:50%; background:#fff; transition:.15s; }
+  .tg.on .sw{ background:#16a34a; } .tg.on .sw::after{ left:23px; }
+  #start{ width:100%; margin-top:26px; padding:18px; border:0; border-radius:14px;
+    background:#16a34a; color:#fff; font-size:20px; font-weight:800; cursor:pointer; }
+  #start:active{ background:#12823c; }
+
+  /* ---------- run ---------- */
+  #run{ align-items:center; justify-content:center; transition:background-color .08s; }
+  #run.is-rot{ background:var(--rot); } #run.is-blau{ background:var(--blau); }
+  #run.is-gelb{ background:var(--gelb); } #run.is-gruen{ background:var(--gruen); }
+  #run.paused{ background:#0c1a12; }
+  #cname{ font-size:14vw; font-weight:900; letter-spacing:.02em; text-transform:uppercase;
+    text-shadow:0 2px 18px rgba(0,0,0,.25); pointer-events:none; }
+  #run.is-gelb #cname{ color:#1a1500; text-shadow:none; }
+  #count{ position:fixed; top:max(16px,env(safe-area-inset-top)); left:0; right:0; text-align:center;
+    font-size:20px; font-weight:700; opacity:.55; font-variant-numeric:tabular-nums; pointer-events:none; }
+  #run.is-gelb #count{ color:#1a1500; }
+  #pausehint{ position:fixed; bottom:max(20px,env(safe-area-inset-bottom)); left:0; right:0;
+    text-align:center; font-size:14px; opacity:.5; pointer-events:none; }
+  #run.is-gelb #pausehint{ color:#1a1500; }
+  #exit{ position:fixed; z-index:10; top:max(12px,env(safe-area-inset-top)); right:14px; width:48px; height:48px;
+    border-radius:50%; border:0; background:rgba(0,0,0,.28); color:#fff; font-size:24px; cursor:pointer; }
+  #run.paused #cname{ font-size:7vw; opacity:.85; }
+</style>
+</head>
+<body>
+
+<!-- ===================== SETUP ===================== -->
+<section id="setup" class="screen active">
+  <div class="card">
+    <h1>Farbblitzer</h1>
+    <div class="sub">K&ouml;nig des Feldes &middot; Startsignal &amp; offenes Tor</div>
+
+    <div class="label">Farben</div>
+    <div class="colors" id="colors">
+      <div class="ck" data-c="rot"   data-on="1"><span class="dot" style="background:var(--rot)"></span>Rot<span class="check">&#10003;</span></div>
+      <div class="ck" data-c="blau"  data-on="1"><span class="dot" style="background:var(--blau)"></span>Blau<span class="check">&#10003;</span></div>
+      <div class="ck" data-c="gelb"  data-on="1"><span class="dot" style="background:var(--gelb)"></span>Gelb<span class="check">&#10003;</span></div>
+      <div class="ck" data-c="gruen" data-on="1"><span class="dot" style="background:var(--gruen)"></span>Gr&uuml;n<span class="check">&#10003;</span></div>
+    </div>
+
+    <div class="label">Rundenl&auml;nge (Sekunden)</div>
+    <div class="row">
+      <div class="stepper">
+        <button id="minus">&minus;</button>
+        <span class="val"><span id="ival">15</span> s</span>
+        <button id="plus">+</button>
+      </div>
+      <span class="hint">Zeit, die eine Farbe stehen bleibt.</span>
+    </div>
+
+    <div class="label">Optionen</div>
+    <div class="toggles">
+      <div class="tg on" id="tgCount"><span>Countdown anzeigen</span><span class="sw"></span></div>
+      <div class="tg on" id="tgVary"><span>Reihenfolge nicht wiederholen</span><span class="sw"></span></div>
+      <div class="tg" id="tgSound"><span>Signalton beim Wechsel</span><span class="sw"></span></div>
+    </div>
+
+    <button id="start">Start</button>
+    <div class="hint" style="text-align:center;margin-top:14px">
+      Tipp: in Safari &bdquo;Zum Home-Bildschirm&ldquo; &rarr; echtes Vollbild. Helligkeit voll aufdrehen.
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RUN ===================== -->
+<section id="run" class="screen">
+  <button id="exit" aria-label="Beenden">&times;</button>
+  <div id="count"></div>
+  <div id="cname"></div>
+  <div id="pausehint">Tippen = Pause</div>
+</section>
+
+<script>
+(function(){
+  "use strict";
+  var NAMES = { rot:"Rot", blau:"Blau", gelb:"Gelb", gruen:"Gr\u00fcn" };
+  var interval = 15;
+  var opt = { count:true, vary:true, sound:false };
+  var timer=null, tickTimer=null, remaining=0, current=null, wake=null, audioCtx=null;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var setup=$("setup"), run=$("run"), cname=$("cname"), count=$("count");
+
+  // colour toggles
+  document.querySelectorAll(".ck").forEach(function(ck){
+    ck.addEventListener("click", function(){
+      var on = ck.getAttribute("data-on")==="1";
+      // keep at least one colour active
+      if(on && activeColors().length<=1) return;
+      ck.setAttribute("data-on", on?"0":"1");
+      ck.classList.toggle("off", on);
+    });
+  });
+  function activeColors(){
+    return [].slice.call(document.querySelectorAll('.ck[data-on="1"]'))
+             .map(function(c){ return c.getAttribute("data-c"); });
+  }
+
+  // interval stepper
+  function renderIval(){ $("ival").textContent = interval; }
+  $("minus").addEventListener("click", function(){ interval=Math.max(2, interval-1); renderIval(); });
+  $("plus").addEventListener("click", function(){ interval=Math.min(60, interval+1); renderIval(); });
+
+  // option toggles
+  function bindTg(id,key){ $(id).addEventListener("click", function(){
+    opt[key]=!opt[key]; $(id).classList.toggle("on", opt[key]); }); }
+  bindTg("tgCount","count"); bindTg("tgVary","vary"); bindTg("tgSound","sound");
+
+  // audio beep (created lazily, must be unlocked by user gesture = Start tap)
+  function beep(){
+    if(!opt.sound || !audioCtx) return;
+    try{
+      var o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.frequency.value=880; o.type="sine"; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.4, audioCtx.currentTime+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+0.18);
+      o.start(); o.stop(audioCtx.currentTime+0.2);
+    }catch(e){}
+  }
+
+  function pick(){
+    var cols=activeColors();
+    var c=cols[Math.floor(Math.random()*cols.length)];
+    if(opt.vary && cols.length>1){ while(c===current){ c=cols[Math.floor(Math.random()*cols.length)]; } }
+    return c;
+  }
+
+  function show(c){
+    current=c;
+    run.className="screen active is-"+c;
+    cname.textContent = "";
+    remaining = interval;
+    renderCount();
+    beep();
+  }
+  function renderCount(){ count.textContent = opt.count ? remaining : ""; }
+
+  function startRun(){
+    // unlock audio on the Start gesture
+    if(opt.sound){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+    requestWake();
+    setup.classList.remove("active");
+    run.classList.add("active");
+    show(pick());
+    timer=setInterval(function(){ show(pick()); }, interval*1000);
+    tickTimer=setInterval(function(){ remaining=Math.max(0,remaining-1); renderCount(); }, 1000);
+  }
+
+  var paused=false;
+  function togglePause(){
+    paused=!paused;
+    if(paused){
+      clearInterval(timer); clearInterval(tickTimer);
+      run.className="screen active paused"; cname.textContent="Pause";
+    } else {
+      run.classList.remove("paused");
+      show(pick());
+      timer=setInterval(function(){ show(pick()); }, interval*1000);
+      tickTimer=setInterval(function(){ remaining=Math.max(0,remaining-1); renderCount(); }, 1000);
+    }
+  }
+  run.addEventListener("click", function(e){ if(e.target.id!=="exit") togglePause(); });
+
+  function stopRun(){
+    clearInterval(timer); clearInterval(tickTimer); paused=false;
+    run.className="screen"; setup.classList.add("active");
+    releaseWake();
+  }
+  $("exit").addEventListener("click", function(e){ e.stopPropagation(); stopRun(); });
+
+  // keep screen awake
+  function requestWake(){
+    try{ if("wakeLock" in navigator){ navigator.wakeLock.request("screen").then(function(w){ wake=w; }); } }catch(e){}
+  }
+  function releaseWake(){ try{ if(wake){ wake.release(); wake=null; } }catch(e){} }
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState==="visible" && run.classList.contains("active")) requestWake();
+  });
+
+  $("start").addEventListener("click", function(){
+    if(activeColors().length===0) return;
+    startRun();
+  });
+  renderIval();
+})();
+</script>
+</body>
+</html>
