@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0c1a12">
 <title>Farbblitzer &ndash; K&ouml;nig des Feldes</title>
 <style>
-  :root{ --rot:#e11d48; --blau:#2563eb; --gelb:#f5c518; --gruen:#16a34a; }
+  :root{ --rot:#e11d48; --blau:#2563eb; --gelb:#f5c518; --orange:#f97316; }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; height:100%; }
   body{ font-family:-apple-system,"Helvetica Neue",Arial,sans-serif; background:#0c1a12;
@@ -53,7 +53,7 @@
   /* ---------- run ---------- */
   #run{ align-items:center; justify-content:center; transition:background-color .08s; }
   #run.is-rot{ background:var(--rot); } #run.is-blau{ background:var(--blau); }
-  #run.is-gelb{ background:var(--gelb); } #run.is-gruen{ background:var(--gruen); }
+  #run.is-gelb{ background:var(--gelb); } #run.is-orange{ background:var(--orange); }
   #run.paused{ background:#0c1a12; }
   #cname{ font-size:14vw; font-weight:900; letter-spacing:.02em; text-transform:uppercase;
     text-shadow:0 2px 18px rgba(0,0,0,.25); pointer-events:none; }
@@ -82,7 +82,7 @@
       <div class="ck" data-c="rot"   data-on="1"><span class="dot" style="background:var(--rot)"></span>Rot<span class="check">&#10003;</span></div>
       <div class="ck" data-c="blau"  data-on="1"><span class="dot" style="background:var(--blau)"></span>Blau<span class="check">&#10003;</span></div>
       <div class="ck" data-c="gelb"  data-on="1"><span class="dot" style="background:var(--gelb)"></span>Gelb<span class="check">&#10003;</span></div>
-      <div class="ck" data-c="gruen" data-on="1"><span class="dot" style="background:var(--gruen)"></span>Gr&uuml;n<span class="check">&#10003;</span></div>
+      <div class="ck" data-c="orange" data-on="1"><span class="dot" style="background:var(--orange)"></span>Orange<span class="check">&#10003;</span></div>
     </div>
 
     <div class="label">Rundenl&auml;nge (Sekunden)</div>
@@ -103,9 +103,6 @@
     </div>
 
     <button id="start">Start</button>
-    <div class="hint" style="text-align:center;margin-top:14px">
-      Tipp: in Safari &bdquo;Zum Home-Bildschirm&ldquo; &rarr; echtes Vollbild. Helligkeit voll aufdrehen.
-    </div>
   </div>
 </section>
 
@@ -120,7 +117,7 @@
 <script>
 (function(){
   "use strict";
-  var NAMES = { rot:"Rot", blau:"Blau", gelb:"Gelb", gruen:"Gr\u00fcn" };
+  var NAMES = { rot:"Rot", blau:"Blau", gelb:"Gelb", orange:"Orange" };
   var interval = 15;
   var opt = { count:true, vary:true, sound:false };
   var timer=null, tickTimer=null, remaining=0, current=null, wake=null, audioCtx=null;
