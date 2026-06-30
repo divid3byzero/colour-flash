@@ -150,13 +150,6 @@
       <span class="hint">Zeit, die eine Farbe stehen bleibt.</span>
     </div>
 
-    <div class="label">Optionen</div>
-    <div class="toggles">
-      <div class="tg on" id="tgCount"><span>Countdown anzeigen</span><span class="sw"></span></div>
-      <div class="tg on" id="tgVary"><span>Reihenfolge nicht wiederholen</span><span class="sw"></span></div>
-      <div class="tg" id="tgSound"><span>Signalton beim Wechsel</span><span class="sw"></span></div>
-    </div>
-
     <div class="label">Gamechanger</div>
     <div class="tg on" id="tgGC"><span>Gamechanger einblenden</span><span class="sw"></span></div>
     <div class="seg" id="spice">
@@ -216,7 +209,7 @@
   "use strict";
   var NAMES = { rot:"Rot", blau:"Blau", gelb:"Gelb", orange:"Orange" };
   var interval = 20;
-  var opt = { count:true, vary:true, sound:false };
+  var opt = { count:false, vary:true, sound:false };
   var spice = "mittel", gcOn = true;
   var CARDS = [
     { lvl:1, t:"Doppelpunkt",         x:"Diese Runde z\u00e4hlt jedes Tor doppelt!" },
@@ -229,7 +222,7 @@
     { lvl:3, t:"Zwei Tore",           x:"Erst durch ein beliebiges Tor, dann durchs Leuchttor!" },
     { lvl:3, t:"R\u00fccken zum Feld",x:"Angreifer startet mit dem R\u00fccken zu den Toren!" }
   ];
-  var lastCard=null, gcTimer=null;
+  var lastCard=null, gcOnTimer=null, gcOffTimer=null;
   var timer=null, tickTimer=null, remaining=0, current=null, wake=null, audioCtx=null;
 
   var $ = function(id){ return document.getElementById(id); };
@@ -255,11 +248,6 @@
   function renderIval(){ $("ival").textContent = interval; }
   $("minus").addEventListener("click", function(){ interval=Math.max(20, interval-1); renderIval(); });
   $("plus").addEventListener("click", function(){ interval=Math.min(60, interval+1); renderIval(); });
-
-  // option toggles
-  function bindTg(id,key){ $(id).addEventListener("click", function(){
-    opt[key]=!opt[key]; $(id).classList.toggle("on", opt[key]); }); }
-  bindTg("tgCount","count"); bindTg("tgVary","vary"); bindTg("tgSound","sound");
 
   // gamechanger intensity
   document.querySelectorAll("#spice button").forEach(function(btn){
@@ -296,20 +284,35 @@
     }catch(e){}
   }
 
-  // attention alert for a gamechanger
-  function playAlert(){
+  // three honks when a gamechanger appears
+  function playHonks(){
     if(!audioCtx) return;
     try{
-      var now=audioCtx.currentTime, seq=[[880,0],[660,0.16],[990,0.32]];
-      seq.forEach(function(p){
+      var now=audioCtx.currentTime;
+      for(var i=0;i<3;i++){
+        var t=now+i*0.28;
         var o=audioCtx.createOscillator(), g=audioCtx.createGain();
-        o.type="square"; o.frequency.value=p[0]; o.connect(g); g.connect(audioCtx.destination);
-        g.gain.setValueAtTime(0.0001, now+p[1]);
-        g.gain.exponentialRampToValueAtTime(0.55, now+p[1]+0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, now+p[1]+0.14);
-        o.start(now+p[1]); o.stop(now+p[1]+0.16);
-      });
+        o.type="sawtooth"; o.frequency.value=360; o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.5, t+0.02);
+        g.gain.setValueAtTime(0.5, t+0.15);
+        g.gain.exponentialRampToValueAtTime(0.0001, t+0.2);
+        o.start(t); o.stop(t+0.22);
+      }
     }catch(e){}
+  }
+  // gamechangers appear at random intervals across the whole session
+  function scheduleGC(){
+    clearTimeout(gcOnTimer);
+    var gap=10000+Math.random()*15000;          // 10-25 s until the next one
+    gcOnTimer=setTimeout(fireGC, gap);
+  }
+  function fireGC(){
+    var card=rollGC();
+    if(!card){ scheduleGC(); return; }
+    showGC(card);
+    var dur=7000+Math.random()*5000;            // banner visible 7-12 s
+    gcOffTimer=setTimeout(function(){ hideGC(); scheduleGC(); }, dur);
   }
   function rollGC(){
     if(!gcOn) return null;
@@ -320,7 +323,7 @@
     while(card===lastCard && pool.length>1 && guard++<8){ card=pool[Math.floor(Math.random()*pool.length)]; }
     lastCard=card; return card;
   }
-  function showGC(card){ gcTitle.textContent=card.t; gcText.textContent=card.x; gcEl.classList.add("show"); playAlert(); }
+  function showGC(card){ gcTitle.textContent=card.t; gcText.textContent=card.x; gcEl.classList.add("show"); playHonks(); }
   function hideGC(){ gcEl.classList.remove("show"); }
 
   var bag=[];
@@ -340,14 +343,6 @@
     cname.textContent = "";
     remaining = interval;
     renderCount();
-    beep();
-    hideGC(); clearTimeout(gcTimer);
-    var card=rollGC();
-    if(card){
-      var roundMs=interval*1000, lo=600, hi=Math.max(lo+300, roundMs-3000);
-      var delay=lo+Math.random()*(hi-lo);
-      gcTimer=setTimeout(function(){ showGC(card); }, delay);
-    }
   }
   function renderCount(){ count.textContent = opt.count ? remaining : ""; }
 
@@ -376,25 +371,27 @@
     show(pick());
     timer=setInterval(function(){ show(pick()); }, interval*1000);
     tickTimer=setInterval(function(){ remaining=Math.max(0,remaining-1); renderCount(); }, 1000);
+    if(gcOn) scheduleGC();
   }
 
   var paused=false;
   function togglePause(){
     paused=!paused;
     if(paused){
-      clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcTimer); hideGC();
+      clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcOnTimer); clearTimeout(gcOffTimer); hideGC();
       run.className="screen active paused"; cname.textContent="Pause";
     } else {
       run.classList.remove("paused");
       show(pick());
       timer=setInterval(function(){ show(pick()); }, interval*1000);
       tickTimer=setInterval(function(){ remaining=Math.max(0,remaining-1); renderCount(); }, 1000);
+      if(gcOn) scheduleGC();
     }
   }
   run.addEventListener("click", function(e){ if(e.target.id!=="exit") togglePause(); });
 
   function stopRun(){
-    clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcTimer); clearInterval(preTimer); paused=false; hideGC();
+    clearInterval(timer); clearInterval(tickTimer); clearTimeout(gcOnTimer); clearTimeout(gcOffTimer); clearInterval(preTimer); paused=false; hideGC();
     run.className="screen"; $("pre").classList.remove("active"); setup.classList.add("active");
     releaseWake();
   }
